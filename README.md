@@ -1,5 +1,7 @@
 # Searcher
 
+Use the Searcher package to quickly search a large list of items via a popup window. For example, use Searcher to find, select, and put down a new node in a graph. The Searcher package also includes samples and tests.
+
 ## Features
 
 ![GitHub Logo](/Documentation~/images/tree_view.png) ![GitHub Logo](/Documentation~/images/quick_search.png)
@@ -42,19 +44,14 @@ Packages/manifest.json
 ```
 Add this to the ```dependencies``` array (makes sure to change the version string to your current version):
 ```json
-"com.unity.searcher": "1.0.1-preview"
-```
-And make sure you have the registry by having this line:
-```json
-"registry": "https://staging-packages.unity.com"
+"com.unity.searcher": "4.0.0-preview"
 ```
 For example, if this it he only package you depend on, you should have something like this (makes sure to change the version string to your current version):
 ```json
 {
     "dependencies": {
-        "com.unity.searcher": "1.0.1-preview"
-    },
-    "registry": "https://staging-packages.unity.com"
+        "com.unity.searcher": "4.0.0-preview"
+    }
 }
 ```
 
@@ -68,10 +65,91 @@ Add a ```testables``` list with the package name so you get something like this 
 ```json
 {
     "dependencies": {
-        "com.unity.searcher": "1.0.1-preview"
+        "com.unity.searcher": "4.0.0-preview"
     },
-    "testables" : [ "com.unity.searcher" ],
-    "registry": "https://staging-packages.unity.com"
+    "testables" : [ "com.unity.searcher" ]
 }
 ```
 You should see a new top-level menu called **Searcher** and you should see Searcher tests in **Test Runner**.
+
+### Searcher Creation from Database
+
+```csharp
+var bookItems = new List<SearcherItem> { new SearcherItem( "Books" ) };
+var foodItems = new List<SearcherItem> { new SearcherItem( "Foods" ) };
+
+// Create databases.
+var databaseDir = Application.dataPath + "/../Library/Searcher";
+var bookDatabase = SearcherDatabase.Create( bookItems, databaseDir + "/Books" );
+var foodDatabase = SearcherDatabase.Create( foodItems, databaseDir + "/Foods" );
+
+// At a later time, load database from disk.
+bookDatabase = SearcherDatabase.Load( databaseDir + "/Books" );
+
+var searcher = new Searcher(
+    new SearcherDatabase[]{ foodDatabase, bookDatabase },
+    "Optional Title" );
+```
+
+### Popup Window or Create Control
+
+```csharp
+Searcher m_Searcher;
+
+void OnMouseDown( MouseDownEvent evt ) { // Popup window...
+   SearcherWindow.Show( this, m_Searcher,
+       item => { Debug.Log( item.name ); return /*close window?*/ true; },
+       evt.mousePosition );
+}
+
+// ...or create SearcherControl VisualElement
+void OnEnable() { // ...or create SearcherControl VisualElement
+   var searcherControl = new SearcherControl();
+   searcherControl.Setup( m_Searcher, item => Debug.Log( item.name ) );
+   this.GetRootVisualContainer().Add( searcherControl );
+}
+```
+
+### Customize the UI via `ISearcherAdapter`
+
+```csharp
+public interface ISearcherAdapter {
+   VisualElement MakeItem();
+   VisualElement Bind( VisualElement target, SearcherItem item,
+                       ItemExpanderState expanderState, string text );
+   string title { get; }
+   bool hasDetailsPanel { get; }
+   void DisplaySelectionDetails( VisualElement detailsPanel, SearcherItem o );
+   void DisplayNoSelectionDetails( VisualElement detailsPanel );
+   void InitDetailsPanel( VisualElement detailsPanel );
+}
+
+var bookDatabase = SearcherDatabase.Load( Application.dataPath + "/Books" );
+var myAdapter = new MyAdapter(); // class MyAdapter : ISearcherAdapter
+var searcher = new Searcher( bookDatabase, myAdapter );
+
+```
+
+# Technical details
+## Requirements
+
+This version of Searcher is compatible with the following versions of the Unity Editor:
+
+* 2019.1 and later (recommended)
+
+## Known limitations
+
+Searcher version 1.0 includes the following known limitations:
+
+* Only works with .Net 4.0
+
+## Package contents
+
+The following table indicates the main folders of the package:
+
+|Location|Description|
+|---|---|
+|`Editor/Resources`|Contains images used in the UI.|
+|`Editor/Searcher`|Contains Searcher source files.|
+|`Samples`|Contains the samples.|
+|`Tests`|Contains the tests.|
