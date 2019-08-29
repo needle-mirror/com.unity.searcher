@@ -64,10 +64,9 @@
 #autoCompleteLabel {
     position: absolute;
     background-image: none;
-    top: 3px;
-    left: 38px;
-    font-size: 10px;
-    -unity-font-style: bold;
+    top: 1px;
+    left: 36px;
+    font-size: 12px;
     color: #828282;
     -unity-text-align: middle-left;
 }
@@ -75,23 +74,23 @@
 #searchBox {
     background-image: none;
     position: absolute;
-    top: 2px;
-    left: 34px;
+    left: 30px;
     right: 0;
     bottom: 0;
-    font-size: 10px;
+    font-size: 12px;
     color: #FFFFFF;
+    border-color: rgba(0, 0, 0, 0);
+    background-color: rgba(0, 0, 0, 0);
 }
 
 #searchBox .unity-base-field__input {
-    padding-top: 0;
     top: 2px;
-    left: 3px;
-    font-size: 10px;
-    -unity-font-style: bold;
+    font-size: 12px;
     -unity-text-align: middle-left;
     color: #FFFFFF;
     background-image: none;
+    border-color: rgba(0, 0, 0, 0);
+    background-color: rgba(0, 0, 0, 0);
 }
 
 #windowSelectionVisualContainer {
@@ -116,6 +115,7 @@
     flex-direction: row;
     flex: 1;
     left: 8px;
+    top: -2px;
 }
 
 .unity-list-view > * #labelsContainer > .unity-label {
@@ -124,7 +124,7 @@
     padding-left: 0;
     padding-right: 0;
     color: #C4C4C4;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .unity-list-view > * > .unity-label {
@@ -157,26 +157,26 @@
 }
 
 .unity-list-view > * #itemChildExpander > #expanderIcon {
-    width: 10px;
-    height: 10px;
-    top: 2px;
+    width: 13px;
+    height: 13px;
+    top: 1px;
     left: 10px;
 }
 
 #smartSearchItem > * > #itemChildExpander > #expanderIcon.Collapsed {
-    background-image: resource("FlatSkin/SearchRightOff");
+    background-image: resource("Builtin Skins/DarkSkin/Images/IN foldout.png");
 }
 
 #smartSearchItem > * > #itemChildExpander > #expanderIcon.Expanded {
-    background-image: resource("FlatSkin/SearchDownOff");
+    background-image: resource("Builtin Skins/DarkSkin/Images/IN foldout on.png");
 }
 
 #smartSearchItem.unity-list-view__item--selected > * > #itemChildExpander > #expanderIcon.Collapsed {
-    background-image: resource("FlatSkin/SearchRightOn");
+    background-image: resource("Builtin Skins/DarkSkin/Images/IN foldout act.png");
 }
 
 #smartSearchItem.unity-list-view__item--selected > * > #itemChildExpander > #expanderIcon.Expanded {
-    background-image: resource("FlatSkin/SearchDownOn");
+    background-image: resource("Builtin Skins/DarkSkin/Images/IN foldout act on.png");
 }
 
 .unity-list-view > * #itemMainVisualContainer {
@@ -214,7 +214,6 @@
 
 #windowDetailsVisualContainer > .unity-label {
     font-size: 11px;
-    -unity-font-style: bold;
     color: #C4C4C4;
     white-space: normal;
 }

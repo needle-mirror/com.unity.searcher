@@ -1,5 +1,49 @@
 # Changelog
 
+## [4.0.7] - 2019-08-29
+
+Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.0.7-preview.tgz
+
+- Fix bold fonts (case 1178374)
+- case 1178373 and 1071573014: minor examples tweaks
+
+## [4.0.6] - 2019-08-01
+
+Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.0.6-preview.tgz
+
+- Fix bug where items were selected twice when using keyboard inputs
+
+## [4.0.5] - 2019-07-26
+
+Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.0.5-preview.tgz
+
+- Fix searcher look to match Northstar changes
+
+## [4.0.4] - 2019-07-23
+
+Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.0.4-preview.tgz
+
+- Change the default size when the searcher has a details panel
+
+## [4.0.3] - 2019-06-11
+
+Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.0.3-preview.tgz
+
+- Added ability to use capital letters in a search bar
+- Bugfix: Search bar focus after the escape button pressed
+
+## [4.0.2] - 2019-05-24
+
+Package: https://bintray.com/unity/unity-staging/com.unity.searcher/4.0.2-preview
+
+- API Make Match() virtual again in SearcherDatabase
+
+## [4.0.1] - 2019-04-30
+
+Package: https://bintray.com/unity/unity-staging/com.unity.searcher/4.0.1-preview
+
+- Bugfix: [MacOs] Fix issue where the searcher moves on the top left corner while resizing/moving
+
 ## [4.0.0] - 2019-04-24
 
 Package: https://bintray.com/unity/unity-staging/com.unity.searcher/4.0.0-preview

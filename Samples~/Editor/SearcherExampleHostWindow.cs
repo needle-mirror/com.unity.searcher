@@ -81,7 +81,8 @@ namespace UnityEditor.Searcher
                 })
             };
 
-            m_DummyVisualElement = new VisualElement();
+            m_DummyVisualElement = new Label {text = "Click here"};
+            m_DummyVisualElement.style.unityTextAlign = TextAnchor.MiddleCenter;
             m_DummyVisualElement.style.backgroundColor = new Color(0.12f, 0.12f, 0.12f, 1.0f);
             m_DummyVisualElement.StretchToParentSize();
             rootVisualElement.Add(m_DummyVisualElement);
@@ -114,8 +115,7 @@ namespace UnityEditor.Searcher
 
         void OnMouseDown(MouseDownEvent evt)
         {
-            if (evt.button == 1) // Right click
-                SearcherWindow.Show(this, m_SearcherItems, "OnMouseDown", item => {
+            SearcherWindow.Show(this, m_SearcherItems, "OnMouseDown", item => {
                     Debug.Log("Searcher item selected: " + (item?.Name ?? "<none>"));
                     return true;
                 }, evt.mousePosition);

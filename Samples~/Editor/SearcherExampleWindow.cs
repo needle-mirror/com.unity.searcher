@@ -16,6 +16,7 @@ namespace UnityEditor.Searcher
 
         public void OnEnable()
         {
+            titleContent = new GUIContent("Searcher Example Window");
             var bookItems = new List<SearcherItem>
             {
                 new SearcherItem("Books", "Books Category", new List<SearcherItem>

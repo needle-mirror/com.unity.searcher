@@ -30,23 +30,40 @@ namespace UnityEditor.Searcher
 
         const string k_DatabaseDirectory = "/../Library/Searcher";
 
+        static readonly float k_SearcherDefaultWidth = 300;
+        static readonly float k_DetailsDefaultWidth = 200;
+        static readonly float k_DefaultHeight = 300;
         static readonly Vector2 k_MinSize = new Vector2(300, 150);
 
-        static Vector2 s_DefaultSize = new Vector2(250, 300);
+        static Vector2 s_Size = Vector2.zero;
         static IEnumerable<SearcherItem> s_Items;
         static Searcher s_Searcher;
         static Func<SearcherItem, bool> s_ItemSelectedDelegate;
 
         Action<Searcher.AnalyticsEvent> m_AnalyticsDataDelegate;
-
         SearcherControl m_SearcherControl;
-
         Vector2 m_OriginalMousePos;
         Rect m_OriginalWindowPos;
         Rect m_NewWindowPos;
         bool m_IsMouseDownOnResizer;
         bool m_IsMouseDownOnTitle;
         Focusable m_FocusedBefore;
+
+        static Vector2 Size
+        {
+            get
+            {
+                if (s_Size == Vector2.zero)
+                {
+                    s_Size = s_Searcher != null && s_Searcher.Adapter.HasDetailsPanel
+                        ? new Vector2(k_SearcherDefaultWidth + k_DetailsDefaultWidth, k_DefaultHeight)
+                        : new Vector2(k_SearcherDefaultWidth, k_DefaultHeight);
+                }
+
+                return s_Size;
+            }
+            set => s_Size = value;
+        }
 
         public static void Show(
             EditorWindow host,
@@ -121,7 +138,7 @@ namespace UnityEditor.Searcher
             var window = CreateInstance<SearcherWindow>();
             window.m_AnalyticsDataDelegate = analyticsDataDelegate;
             var position = GetPosition(host, displayPosition);
-            window.position = new Rect(GetPositionWithAlignment(position + host.position.position, s_DefaultSize, align), s_DefaultSize);
+            window.position = new Rect(GetPositionWithAlignment(position + host.position.position, Size, align), Size);
             window.ShowPopup();
             window.Focus();
         }
@@ -162,8 +179,8 @@ namespace UnityEditor.Searcher
             var y = displayPosition.y;
 
             // Searcher overlaps with the right boundary.
-            if (x + s_DefaultSize.x >= host.position.size.x)
-                x -= s_DefaultSize.x;
+            if (x + Size.x >= host.position.size.x)
+                x -= Size.x;
 
             // The displayPosition should be in window world space but the
             // EditorWindow.position is actually the rootVisualElement
@@ -172,8 +189,8 @@ namespace UnityEditor.Searcher
             y -= host.rootVisualElement.resolvedStyle.top;
 
             // Searcher overlaps with the bottom boundary.
-            if (y + s_DefaultSize.y >= host.position.size.y)
-                y -= s_DefaultSize.y;
+            if (y + Size.y >= host.position.size.y)
+                y -= Size.y;
 
             return new Vector2(x, y);
         }
@@ -244,7 +261,14 @@ namespace UnityEditor.Searcher
         void OnTitleMouseMove(MouseMoveEvent evt)
         {
             var delta = evt.mousePosition - m_OriginalMousePos;
+
+            // TODO Temporary fix for Visual Scripting 1st drop. Find why position.position is 0,0 on MacOs in MouseMoveEvent
+            // Bug occurs with Unity 2019.2.0a13
+#if UNITY_EDITOR_OSX
+            m_NewWindowPos = new Rect(m_NewWindowPos.position + delta, position.size);
+#else
             m_NewWindowPos = new Rect(position.position + delta, position.size);
+#endif
             Repaint();
         }
 
@@ -289,15 +313,16 @@ namespace UnityEditor.Searcher
         void OnResizerMouseMove(MouseMoveEvent evt)
         {
             var delta = evt.mousePosition - m_OriginalMousePos;
-            s_DefaultSize = m_OriginalWindowPos.size + delta;
+            Size = m_OriginalWindowPos.size + delta;
+            Size = new Vector2(Math.Max(k_MinSize.x, Size.x), Math.Max(k_MinSize.y, Size.y));
 
-            if (s_DefaultSize.x < k_MinSize.x)
-                s_DefaultSize.x = k_MinSize.x;
-
-            if (s_DefaultSize.y < k_MinSize.y)
-                s_DefaultSize.y = k_MinSize.y;
-
-            m_NewWindowPos = new Rect(position.position, s_DefaultSize);
+            // TODO Temporary fix for Visual Scripting 1st drop. Find why position.position is 0,0 on MacOs in MouseMoveEvent
+            // Bug occurs with Unity 2019.2.0a13
+#if UNITY_EDITOR_OSX
+            m_NewWindowPos = new Rect(m_NewWindowPos.position, Size);
+#else
+            m_NewWindowPos = new Rect(position.position, Size);
+#endif
             Repaint();
         }
 

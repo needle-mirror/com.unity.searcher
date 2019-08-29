@@ -24,7 +24,7 @@ namespace UnityEditor.Searcher
         HashSet<SearcherItem> m_ExpandedResults;
         Searcher m_Searcher;
         string m_SuggestedTerm;
-        string m_Text;
+        string m_Text = string.Empty;
         Action<SearcherItem> m_SelectionCallback;
         Action<Searcher.AnalyticsEvent> m_AnalyticsDataCallback;
         ListView m_ListView;
@@ -73,8 +73,9 @@ namespace UnityEditor.Searcher
             {
                 m_SearchTextField.focusable = true;
                 m_SearchTextField.RegisterCallback<InputEvent>(OnSearchTextFieldTextChanged);
-                m_SearchTextField.Q("unity-text-input").RegisterCallback<KeyDownEvent>(OnSearchTextFieldKeyDown);
+
                 m_SearchTextInput = m_SearchTextField.Q(TextInputBaseField<string>.textInputUssName);
+                m_SearchTextInput.RegisterCallback<KeyDownEvent>(OnSearchTextFieldKeyDown);
             }
 
             m_AutoCompleteLabel = this.Q<Label>(k_WindowAutoCompleteLabelName);
@@ -117,6 +118,7 @@ namespace UnityEditor.Searcher
 
         void CancelSearch()
         {
+            OnSearchTextFieldTextChanged(InputEvent.GetPooled(m_Text, string.Empty));
             m_SelectionCallback(null);
             m_AnalyticsDataCallback?.Invoke(new Searcher.AnalyticsEvent(Searcher.AnalyticsEvent.EventType.Cancelled, m_SearchTextField.value));
         }
@@ -149,8 +151,7 @@ namespace UnityEditor.Searcher
 
         void Refresh()
         {
-            var query = m_SearchTextField.text;
-
+            var query = m_Text;
             m_Results = m_Searcher.Search(query);
             GenerateVisibleResults();
 
@@ -169,14 +170,14 @@ namespace UnityEditor.Searcher
 
                 if (query.Length > 0)
                 {
-                    var strings = scrollToItem.Name.ToLowerInvariant().Split(' ');
-                    var wordStartIndex = cursorIndex == 0 ? 0 : (query.LastIndexOf(' ', cursorIndex - 1) + 1);
+                    var strings = scrollToItem.Name.Split(' ');
+                    var wordStartIndex = cursorIndex == 0 ? 0 : query.LastIndexOf(' ', cursorIndex - 1) + 1;
                     var word = query.Substring(wordStartIndex, cursorIndex - wordStartIndex);
 
                     if (word.Length > 0)
                         foreach (var t in strings)
                         {
-                            if (t.StartsWith(word))
+                            if (t.StartsWith(word, StringComparison.OrdinalIgnoreCase))
                             {
                                 m_SuggestedTerm = t;
                                 break;
@@ -194,7 +195,7 @@ namespace UnityEditor.Searcher
 
         void GenerateVisibleResults()
         {
-            if (string.IsNullOrEmpty(m_SearchTextField.text))
+            if (string.IsNullOrEmpty(m_Text))
             {
                 m_ExpandedResults.Clear();
                 RemoveChildrenFromResults();
@@ -470,7 +471,6 @@ namespace UnityEditor.Searcher
                 this.Q(k_WindowSearchIconName).AddToClassList("Active");
 
             Refresh();
-            m_SearchTextField.value = m_SearchTextField.text.ToLower();
 
             // Calculate the start and end indexes of the word being modified (if any).
             var cursorIndex = m_SearchTextField.cursorIndex;
@@ -497,8 +497,10 @@ namespace UnityEditor.Searcher
 
             if (!string.IsNullOrEmpty(m_SuggestedTerm))
             {
+                var wordSuggestion =
+                    word + m_SuggestedTerm.Substring(word.Length, m_SuggestedTerm.Length - word.Length);
                 text = text.Remove(wordStartIndex, word.Length);
-                text = text.Insert(wordStartIndex, m_SuggestedTerm);
+                text = text.Insert(wordStartIndex, wordSuggestion);
                 m_AutoCompleteLabel.text = text;
             }
             else

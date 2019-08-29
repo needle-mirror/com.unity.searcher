@@ -102,7 +102,7 @@ namespace UnityEditor.Searcher
             return finalResults;
         }
 
-        bool Match(string query, SearcherItem item, out float score)
+        protected virtual bool Match(string query, SearcherItem item, out float score)
         {
             var filter = MatchFilter?.Invoke(query, item) ?? true;
             return Match(query, item.Path, out score) && filter;
