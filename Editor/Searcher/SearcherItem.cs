@@ -16,7 +16,7 @@ namespace UnityEditor.Searcher
 
         public int Id => m_Id;
 
-        public string Name => m_Name;
+        public virtual string Name => m_Name;
 
         public string Path { get; private set; }
 

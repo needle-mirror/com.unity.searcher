@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.0.8] - 2019-09-16
+
+Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.0.8-preview.tgz
+
+- Made SearcherItem Name property virtual
+
 ## [4.0.7] - 2019-08-29
 
 Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.0.7-preview.tgz
