@@ -54,12 +54,19 @@ namespace UnityEditor.Searcher
 
             m_ListView = this.Q<ListView>(k_WindowResultsScrollViewName);
 
+            
             if (m_ListView != null)
             {
                 m_ListView.bindItem = Bind;
                 m_ListView.RegisterCallback<KeyDownEvent>(OnResultsScrollViewKeyDown);
+                
+#if UNITY_2020_1_OR_NEWER
+                m_ListView.onItemsChosen += obj => m_SelectionCallback((SearcherItem)obj.FirstOrDefault());
+                m_ListView.onSelectionChange += selectedItems => m_Searcher.Adapter.OnSelectionChanged(selectedItems.OfType<SearcherItem>().ToList());
+#else
                 m_ListView.onItemChosen += obj => m_SelectionCallback((SearcherItem)obj);
                 m_ListView.onSelectionChanged += selectedItems => m_Searcher.Adapter.OnSelectionChanged(selectedItems.OfType<SearcherItem>());
+#endif
                 m_ListView.focusable = true;
                 m_ListView.tabIndex = 1;
             }

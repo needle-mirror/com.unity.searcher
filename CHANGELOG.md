@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.0.9] - 2019-10-22
+
+Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.0.9-preview.tgz
+
+- Update ListView API
+
 ## [4.0.8] - 2019-09-16
 
 Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.0.8-preview.tgz
