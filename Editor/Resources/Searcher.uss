@@ -19,6 +19,16 @@
     cursor: resize-up-left;
 }
 
+#splitter
+{
+    flex-direction:row;
+    position: absolute;
+    right:0;
+    top:0;
+    left:0;
+    bottom:0;
+}
+
 #windowResizerIcon {
     flex: 1;
     background-image:resource("WindowBottomResize");
@@ -64,7 +74,7 @@
 #autoCompleteLabel {
     position: absolute;
     background-image: none;
-    top: 1px;
+    top: 2px;
     left: 36px;
     font-size: 12px;
     color: #828282;
@@ -77,6 +87,8 @@
     left: 30px;
     right: 0;
     bottom: 0;
+    margin-bottom: 2px;
+    margin-top: 2px;
     font-size: 12px;
     color: #FFFFFF;
     border-color: rgba(0, 0, 0, 0);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 
 namespace UnityEditor.Searcher
 {
@@ -16,6 +17,7 @@ namespace UnityEditor.Searcher
         const string k_WindowAutoCompleteLabelName = "autoCompleteLabel";
         const string k_WindowSearchIconName = "searchIcon";
         const string k_WindowResizerName = "windowResizer";
+        const string kWindowSearcherPanel = "searcherVisualContainer";
         const int k_TabCharacter = 9;
 
         Label m_AutoCompleteLabel;
@@ -31,6 +33,7 @@ namespace UnityEditor.Searcher
         TextField m_SearchTextField;
         VisualElement m_SearchTextInput;
         VisualElement m_DetailsPanel;
+        VisualElement m_SearcherPanel;
 
         internal Label TitleLabel { get; }
         internal VisualElement Resizer { get; }
@@ -54,12 +57,12 @@ namespace UnityEditor.Searcher
 
             m_ListView = this.Q<ListView>(k_WindowResultsScrollViewName);
 
-            
+
             if (m_ListView != null)
             {
                 m_ListView.bindItem = Bind;
                 m_ListView.RegisterCallback<KeyDownEvent>(OnResultsScrollViewKeyDown);
-                
+
 #if UNITY_2020_1_OR_NEWER
                 m_ListView.onItemsChosen += obj => m_SelectionCallback((SearcherItem)obj.FirstOrDefault());
                 m_ListView.onSelectionChange += selectedItems => m_Searcher.Adapter.OnSelectionChanged(selectedItems.OfType<SearcherItem>().ToList());
@@ -74,6 +77,8 @@ namespace UnityEditor.Searcher
             m_DetailsPanel = this.Q(k_WindowDetailsPanel);
 
             TitleLabel = this.Q<Label>(k_WindowTitleLabel);
+
+            m_SearcherPanel = this.Q(kWindowSearcherPanel);
 
             m_SearchTextField = this.Q<TextField>(k_WindowSearchTextFieldName);
             if (m_SearchTextField != null)
@@ -140,11 +145,22 @@ namespace UnityEditor.Searcher
             {
                 m_Searcher.Adapter.InitDetailsPanel(m_DetailsPanel);
                 m_DetailsPanel.RemoveFromClassList("hidden");
+                m_DetailsPanel.style.flexGrow = m_Searcher.Adapter.InitialSplitterDetailRatio;
+                m_SearcherPanel.style.flexGrow = 1;
             }
             else
             {
                 m_DetailsPanel.AddToClassList("hidden");
+
+                var splitter = m_DetailsPanel.parent;
+
+                splitter.parent.Insert(0,m_SearcherPanel);
+                splitter.parent.Insert(1, m_DetailsPanel);
+
+                splitter.RemoveFromHierarchy();
             }
+
+            
 
             TitleLabel.text = m_Searcher.Adapter.Title;
             if (string.IsNullOrEmpty(TitleLabel.text))
@@ -153,6 +169,7 @@ namespace UnityEditor.Searcher
                 TitleLabel.parent.style.position = Position.Absolute;
             }
 
+            m_Searcher.BuildIndices();
             Refresh();
         }
 
@@ -290,6 +307,9 @@ namespace UnityEditor.Searcher
 
             foreach (var child in item.Children)
             {
+                if (!m_Results.Contains(child))
+                    continue;
+
                 if (!idSet.Contains(child))
                 {
                     idSet.Add(child);

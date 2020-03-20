@@ -23,6 +23,8 @@ namespace UnityEditor.Searcher
             DatabaseDirectory = databaseDirectory;
         }
 
+        public virtual void BuildIndex() { }
+
         public abstract List<SearcherItem> Search(string query, out float localMaxScore);
 
         internal void OverwriteId(int newId)

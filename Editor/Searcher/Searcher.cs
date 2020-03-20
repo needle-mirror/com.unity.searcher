@@ -45,10 +45,16 @@ namespace UnityEditor.Searcher
             Adapter = adapter ?? new SearcherAdapter(title);
         }
 
+        public void BuildIndices()
+        {
+            foreach (var database in m_Databases)
+            {
+                database.BuildIndex();
+            }
+        }
+
         public IEnumerable<SearcherItem> Search(string query)
         {
-            // TODO: Fix properly!
-            // See: https://gitlab.internal.unity3d.com/upm-packages/editor/com.unity.searcher/issues/22
             query = query.ToLower();
 
             var results = new List<SearcherItem>();

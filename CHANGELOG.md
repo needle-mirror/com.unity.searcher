@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.1.0] - 2020-03-20
+
+Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.1.0-preview.tgz
+
+- Improve matching algorithm
+- Add a splitter between searcher and details panel
+- Fix adding all children of matching expanded categories
+
 ## [4.0.9] - 2019-10-22
 
 Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.0.9-preview.tgz

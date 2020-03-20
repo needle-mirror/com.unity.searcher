@@ -82,9 +82,8 @@ namespace UnityEditor.Searcher.Tests
         }
 
         [TestCase("Japanese", 1)]
-        [TestCase("books", 12)]
-        [TestCase("C", 9)]
-        [TestCase("The Time Machine", 1)]
+        [TestCase("books", 1)]
+        [TestCase("C", 5)]
         public void SingleTermSearch(string term, int expectedResultCount)
         {
             Assert.IsTrue(term != null, "Term must not be null");
@@ -96,18 +95,16 @@ namespace UnityEditor.Searcher.Tests
             Assert.IsTrue(items.First().Name.ToLower().StartsWith(term.ToLower()));
         }
 
-        [TestCase("Books Cook", 6)]
-        [TestCase("Food Vegetables Lett", 1)]
-        public void SpaceSeparatedParentsSearch(string term, int expectedResultCount)
+        [TestCase("The Time Machine", 1)]
+        [TestCase("Books Cook", 2)]
+        [TestCase("Food Vegetables Lett", 3)]
+        public void MultipleTermsSearch(string term, int expectedResultCount)
         {
             Assert.IsTrue(term != null, "Term must not be null");
 
             var items = m_Searcher.Search(term);
 
             Assert.AreEqual(expectedResultCount, items.Count(), "Term '" + term + "' must match at least one data stub.");
-
-            string expectedStartsWith = term.Split(' ').Last().ToLower();
-            Assert.IsTrue(items.First().Name.ToLower().StartsWith(expectedStartsWith));
         }
     }
 
@@ -122,10 +119,9 @@ namespace UnityEditor.Searcher.Tests
 
         static TestCaseData[] BasicCases() => Make("Basic ", new[]
         {
-            new TestCaseData( "transform position x", "traXXXX", false),
-            new TestCaseData( "transform position x", "traXXXX pos", false),
-            new TestCaseData( "transform position x", "transform pXX", false),
-            new TestCaseData( "transform position x", "transform XXX", false),
+            new TestCaseData( "transform position x", "traxxxx", false),
+            new TestCaseData( "transform position x", "trxxxx pos", true),
+            new TestCaseData( "transform position x", "transform xx", true),
             new TestCaseData( "transform position x", "transform", true),
             new TestCaseData( "transform position x", "transform pos", true),
             new TestCaseData( "transform position x", "transform   pos", true),
@@ -138,28 +134,52 @@ namespace UnityEditor.Searcher.Tests
             new TestCaseData( "transform position x", "tr pos x", true),
             new TestCaseData( "transform position x", "tr pos      x", true),
             new TestCaseData( "transform position x", "tr    pos      x", true),
-            new TestCaseData( "transform position x", "ta pos", false),
-            new TestCaseData( "transform position x", "ta  pos", false),
+            new TestCaseData( "transform position x", "ta pos", true),
+            new TestCaseData( "transform position x", "ta  pos", true),
+            new TestCaseData( "transform position x", "ta  pout", false),
         });
 
         static TestCaseData[] CamelCaseSplitCases() => Make("CamelCase", new[]
         {
-            new TestCaseData("GameObject OnDestroy", "o x", false)
+            new TestCaseData("GameObject OnDestroy", "o x", true),
+            new TestCaseData("GameObject OnDestroy", "object x", true),
+        });
+
+        static TestCaseData[] AbreviationCases() => Make("AbreviationCase", new[]
+        {
+            new TestCaseData("GameObject OnDestroy", "go", true),
+            new TestCaseData("GameObject OnDestroy", "good", true),
+            new TestCaseData("GameObject OnDestroy", "gof", false),
         });
 
         [TestCaseSource(nameof(BasicCases))]
         [TestCaseSource(nameof(PrefixCases))]
         [TestCaseSource(nameof(CamelCaseSplitCases))]
+        [TestCaseSource(nameof(AbreviationCases))]
         public void Match(string path, string query, bool expectedResult)
         {
             Assume.That(query, Does.Not.StartWith(" "), () => "Queries start/end spaces are supposed to be trimmed earlier");
             Assume.That(query, Does.Not.EndWith(" "), () => "Queries start/end spaces are supposed to be trimmed earlier");
 
             // Reflection for:
-            // bool actual = SearcherDatabase.Match(query, path, out float score);
-            var m = typeof(SearcherDatabase).GetMethod("Match", BindingFlags.Static | BindingFlags.NonPublic);
-            var parameters = new object[] { query, path, null };
-            bool actual = m != null && (bool)m.Invoke(null, parameters);
+            // IList<string> tokenizedQuery = SearcherDatabase.Tokenize(query);
+            var t = typeof(SearcherDatabase).GetMethod("Tokenize", BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.IsNotNull(t, "Tokenize method not found");
+
+            var tokenizeParameters = new object[] { query };
+            IList<string> tokenizedQuery = (IList<string>)t?.Invoke(null, tokenizeParameters);
+
+            // Reflection for:
+            // bool actual = SearcherDatabase.Match(tokenizedQuery, path, out score);
+            Type sdType = typeof(SearcherDatabase);
+            var m = sdType.GetMethod("Match", BindingFlags.NonPublic | BindingFlags.Instance, null,
+            new [] {tokenizedQuery.GetType(), path.GetType(), typeof(float).MakeByRefType()}, null);
+            Assert.IsNotNull(m, "Match method not found");
+
+            var searcherDatabase = new SearcherDatabase(new SearcherItem[] {new SearcherItem(path)});
+            searcherDatabase.BuildIndex();
+            var parameters = new object[] { tokenizedQuery, path, null };
+            bool actual = (bool)m.Invoke(searcherDatabase, parameters);
 
             Assert.AreEqual(expectedResult, actual);
         }

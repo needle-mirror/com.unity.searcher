@@ -132,18 +132,29 @@ namespace UnityEditor.Searcher
             Action<Searcher.AnalyticsEvent> analyticsDataDelegate,
             Alignment align = default)
         {
+            var position = GetPosition(host, displayPosition);
+            var rect = new Rect(GetPositionWithAlignment(position + host.position.position, Size, align), Size);
+
+            Show(host, searcher, itemSelectedDelegate, analyticsDataDelegate, rect);
+        }
+        public static void Show(
+            EditorWindow host,
+            Searcher searcher,
+            Func<SearcherItem, bool> itemSelectedDelegate,
+            Action<Searcher.AnalyticsEvent> analyticsDataDelegate,
+            Rect rect)
+        {
             s_Searcher = searcher;
             s_ItemSelectedDelegate = itemSelectedDelegate;
 
             var window = CreateInstance<SearcherWindow>();
             window.m_AnalyticsDataDelegate = analyticsDataDelegate;
-            var position = GetPosition(host, displayPosition);
-            window.position = new Rect(GetPositionWithAlignment(position + host.position.position, Size, align), Size);
+            window.position = rect;
             window.ShowPopup();
             window.Focus();
         }
 
-        static Vector2 GetPositionWithAlignment(Vector2 pos, Vector2 size, Alignment align)
+        public static Vector2 GetPositionWithAlignment(Vector2 pos, Vector2 size, Alignment align)
         {
             var x = pos.x;
             var y = pos.y;

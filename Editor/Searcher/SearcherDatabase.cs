@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -12,6 +13,8 @@ namespace UnityEditor.Searcher
     [PublicAPI]
     public class SearcherDatabase : SearcherDatabaseBase
     {
+        Dictionary<string, IReadOnlyList<ValueTuple<string, float>>> m_Index = new Dictionary<string, IReadOnlyList<ValueTuple<string, float>>>();
+
         class Result
         {
             public SearcherItem item;
@@ -36,6 +39,7 @@ namespace UnityEditor.Searcher
             if (serializeToFile)
                 database.SerializeToFile();
 
+            database.BuildIndex();
             return database;
         }
 
@@ -46,6 +50,7 @@ namespace UnityEditor.Searcher
 
             var database = new SearcherDatabase(databaseDirectory, null);
             database.LoadFromFile();
+            database.BuildIndex();
 
             return database;
         }
@@ -86,12 +91,17 @@ namespace UnityEditor.Searcher
 
             var finalResults = new List<SearcherItem> { null };
             var max = new Result();
+            var tokenizedQuery = new List<string>();
+            foreach (var token in Tokenize(query))
+            {
+                tokenizedQuery.Add(token.Trim().ToLower());
+            }
 
             // ReSharper disable once RedundantLogicalConditionalExpressionOperand
             if (k_IsParallel && m_ItemList.Count > 100)
-                SearchMultithreaded(query, max, finalResults);
+                SearchMultithreaded(query, tokenizedQuery, max, finalResults);
             else
-                SearchSingleThreaded(query, max, finalResults);
+                SearchSingleThreaded(query, tokenizedQuery, max, finalResults);
 
             localMaxScore = max.maxScore;
             if (max.item != null)
@@ -102,10 +112,10 @@ namespace UnityEditor.Searcher
             return finalResults;
         }
 
-        protected virtual bool Match(string query, SearcherItem item, out float score)
+        protected virtual bool Match(string query, IReadOnlyList<string> tokenizedQuery, SearcherItem item, out float score)
         {
             var filter = MatchFilter?.Invoke(query, item) ?? true;
-            return Match(query, item.Path, out score) && filter;
+            return Match(tokenizedQuery, item.Path, out score) && filter;
         }
 
         List<SearcherItem> FilterSingleThreaded(string query)
@@ -163,32 +173,35 @@ namespace UnityEditor.Searcher
             return result;
         }
 
-        void SearchSingleThreaded(string query, Result max, ICollection<SearcherItem> finalResults)
+        readonly float k_ScoreCutOff = 0.33f;
+
+        void SearchSingleThreaded(string query, IReadOnlyList<string> tokenizedQuery, Result max, ICollection<SearcherItem> finalResults)
         {
+            List<Result> results = new List<Result>();
+
             foreach (var item in m_ItemList)
             {
                 float score = 0;
-                if (query.Length == 0 || Match(query, item, out score))
+                if (query.Length == 0 || Match(query, tokenizedQuery, item, out score))
                 {
                     if (score > max.maxScore)
                     {
-                        if (max.item != null)
-                            finalResults.Add(max.item);
                         max.item = item;
                         max.maxScore = score;
                     }
-                    else
-                        finalResults.Add(item);
+                    results.Add(new Result() { item = item, maxScore = score});
                 }
             }
+
+            PostprocessResults(results, finalResults, max);
         }
 
-        void SearchMultithreaded(string query, Result max, List<SearcherItem> finalResults)
+        void SearchMultithreaded(string query, IReadOnlyList<string> tokenizedQuery, Result max, List<SearcherItem> finalResults)
         {
             var count = Environment.ProcessorCount;
             var tasks = new Task[count];
             var localResults = new Result[count];
-            var queue = new ConcurrentQueue<SearcherItem>();
+            var queue = new ConcurrentQueue<Result>();
             var itemsPerTask = (int)Math.Ceiling(m_ItemList.Count / (float)count);
 
             for (var i = 0; i < count; i++)
@@ -205,17 +218,15 @@ namespace UnityEditor.Searcher
                             break;
                         var item = m_ItemList[index];
                         float score = 0;
-                        if (query.Length == 0 || Match(query, item, out score))
+                        if (query.Length == 0 || Match(query, tokenizedQuery, item, out score))
                         {
                             if (score > result.maxScore)
                             {
-                                if (result.item != null)
-                                    queue.Enqueue(result.item);
                                 result.maxScore = score;
                                 result.item = item;
                             }
-                            else
-                                queue.Enqueue(item);
+
+                            queue.Enqueue(new Result { item = item, maxScore = score });
                         }
                     }
                 });
@@ -228,123 +239,148 @@ namespace UnityEditor.Searcher
                 if (localResults[i].maxScore > max.maxScore)
                 {
                     max.maxScore = localResults[i].maxScore;
-                    if (max.item != null)
-                        queue.Enqueue(max.item);
                     max.item = localResults[i].item;
                 }
-                else if (localResults[i].item != null)
-                    queue.Enqueue(localResults[i].item);
             }
 
-            finalResults.AddRange(queue.OrderBy(i => i.Id));
+            PostprocessResults(queue, finalResults, max);
         }
 
-        static int NextSeparator(string s, int index)
+        void PostprocessResults(IEnumerable<Result> results, ICollection<SearcherItem> items, Result max)
         {
-            for (; index < s.Length; index++)
-                if (IsWhiteSpace(s[index])) // || char.IsUpper(s[index]))
-                    return index;
-            return -1;
-        }
-
-        static bool IsWhiteSpace(char c)
-        {
-            return c == ' ' || c == '\t';
-        }
-
-        static char ToLowerAsciiInvariant(char c)
-        {
-            if ('A' <= c && c <= 'Z')
-                c |= ' ';
-            return c;
-        }
-
-        static bool StartsWith(string s, int sStart, int sCount, string prefix, int prefixStart, int prefixCount)
-        {
-            if (prefixCount > sCount)
-                return false;
-            for (var i = 0; i < prefixCount; i++)
+            foreach (var result in results)
             {
-                if (ToLowerAsciiInvariant(s[sStart + i]) != ToLowerAsciiInvariant(prefix[prefixStart + i]))
-                    return false;
+                var normalizedScore = result.maxScore / max.maxScore;
+                if (result.item != null && result.item != max.item && normalizedScore > k_ScoreCutOff)
+                {
+                    items.Add(result.item);
+                }
+            }
+        }
+
+        public override void BuildIndex()
+        {
+            m_Index.Clear();
+
+            foreach (var item in m_ItemList)
+            {
+                if (!m_Index.ContainsKey(item.Path))
+                {
+                    List<ValueTuple<string, float>> terms  = new List<ValueTuple<string, float>>();
+
+                    string tokenSuite = "";
+                    foreach (var token in Tokenize(item.Name))
+                    {
+                        var t = token.ToLower();
+                        if (t.Length > 1)
+                        {
+                            terms.Add(new ValueTuple<string, float>(t, 0.8f));
+                        }
+
+                        if (tokenSuite.Length > 0)
+                        {
+                            tokenSuite += " " + t;
+                            terms.Add(new ValueTuple<string, float>(tokenSuite, 1f));
+                        }
+                        else
+                        {
+                            tokenSuite = t;
+                        }
+                    }
+
+                    // Add a term containing all the uppercase letters (CamelCase World BBox => CCWBB)
+                    var initialList = Regex.Split(item.Name, @"\P{Lu}+");
+                    var initials = string.Concat(initialList).Trim();
+                    if (!string.IsNullOrEmpty(initials))
+                        terms.Add(new ValueTuple<string, float>(initials.ToLower(), 0.5f));
+
+                    m_Index.Add(item.Path, terms);
+                }
+            }
+        }
+
+        static IList<string> Tokenize(string s)
+        {
+            var knownTokens = new HashSet<string>();
+            var tokens = new List<string>();
+
+            // Split on word boundaries
+            foreach (var t in Regex.Split(s, @"\W"))
+            {
+                // Split camel case words
+                var tt = Regex.Split(t, @"(\p{Lu}+\P{Lu}*)");
+                foreach (var ttt in tt)
+                {
+                    var tttt = ttt.Trim();
+                    if (!string.IsNullOrEmpty(tttt) && !knownTokens.Contains(tttt))
+                    {
+                        knownTokens.Add(tttt);
+                        tokens.Add(tttt);
+                    }
+                }
             }
 
-            return true;
+            return tokens;
         }
 
-        static bool Match(string query, string itemPath, out float score)
+        bool Match(IReadOnlyList<string> tokenizedQuery, string itemPath, out float score)
         {
-            int queryPartStart = 0;
-            int pathPartStart = 0;
-
-            score = 0;
-            var skipped = 0;
-            do
+            itemPath = itemPath.Trim();
+            if (itemPath == "")
             {
-                // skip remaining spaces in path
-                while (pathPartStart < itemPath.Length && IsWhiteSpace(itemPath[pathPartStart]))
-                    pathPartStart++;
-
-                // query is not done, nothing remaining in path, failure
-                if (pathPartStart > itemPath.Length - 1)
+                if (tokenizedQuery.Count == 0)
+                {
+                    score = 1;
+                    return true;
+                }
+                else
                 {
                     score = 0;
                     return false;
                 }
+            }
 
-                // skip query spaces. notice the + 1
-                while (queryPartStart < query.Length && IsWhiteSpace(query[queryPartStart]))
-                    queryPartStart++;
+            IReadOnlyList<ValueTuple<string, float>> indexTerms;
+            if (!m_Index.TryGetValue(itemPath, out indexTerms))
+            {
+                score = 0;
+                return false;
+            }
 
-                // find next separator in query
-                int queryPartEnd = query.IndexOf(' ', queryPartStart);
-                if (queryPartEnd == -1)
-                    queryPartEnd = query.Length; // no spaces, take everything remaining
-
-                // next space, starting after the path part last char
-                int pathPartEnd = NextSeparator(itemPath, pathPartStart + 1);
-                if (pathPartEnd == -1)
-                    pathPartEnd = itemPath.Length;
-
-
-                int queryPartLength = queryPartEnd - queryPartStart;
-                int pathPartLength = pathPartEnd - pathPartStart;
-                bool match = StartsWith(itemPath, pathPartStart, pathPartLength,
-                    query, queryPartStart, queryPartLength);
-
-                pathPartStart = pathPartEnd;
-
-                if (!match)
+            float maxScore = 0.0f;
+            foreach (var t in indexTerms)
+            {
+                float scoreForTerm = 0f;
+                var querySuite = "";
+                var querySuiteFactor = 1.25f;
+                foreach (var q in tokenizedQuery)
                 {
-                    skipped++;
-                    continue;
-                }
-
-                score += queryPartLength / (float)Mathf.Max(1, pathPartLength);
-                if (queryPartEnd == query.Length)
-                {
-                    int pathPartCount = 1;
-                    while (-1 != pathPartStart)
+                    if (t.Item1.StartsWith(q))
                     {
-                        pathPartStart = NextSeparator(itemPath, pathPartStart + 1);
-                        pathPartCount++;
+                        scoreForTerm += t.Item2 * q.Length / t.Item1.Length;
                     }
 
-                    int queryPartCount = 1;
-                    while (-1 != queryPartStart)
+                    if (querySuite.Length > 0)
                     {
-                        queryPartStart = NextSeparator(query, queryPartStart + 1);
-                        pathPartCount++;
+                        querySuite += " " + q;
+                        if (t.Item1.StartsWith(querySuite))
+                        {
+                            scoreForTerm += t.Item2 * querySuiteFactor * querySuite.Length / t.Item1.Length;
+                        }
+                    }
+                    else
+                    {
+                        querySuite = q;
                     }
 
-                    score *= queryPartCount / (float)pathPartCount;
-                    score *= 1 / (1.0f + skipped);
-
-                    return true; // successfully matched all query parts
+                    querySuiteFactor *= querySuiteFactor;
                 }
 
-                queryPartStart = queryPartEnd + 1;
-            } while (true);
+                maxScore = Mathf.Max(maxScore, scoreForTerm);
+            }
+
+            score = maxScore;
+            return score > 0;
         }
     }
 }

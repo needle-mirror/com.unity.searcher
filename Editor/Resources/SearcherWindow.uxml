@@ -1,6 +1,7 @@
-<UXML xmlns:ui="UnityEngine.UIElements" xmlns:lv="UnityEditor.EditorCommon.UIElements.ListView">
+<UXML xmlns:ui="UnityEngine.UIElements"  xmlns:ed="UnityEditor.Experimental.UIElements" xmlns:lv="UnityEditor.EditorCommon.UIElements.ListView">
   <ui:VisualElement name="windowMainVisualContainer">
     <Style path="Searcher"/>
+    <ed:VisualSplitter name="splitter">
     <ui:VisualElement name="searcherVisualContainer">
       <ui:VisualElement name="windowTitleContainer">
         <ui:Label name="windowTitleLabel" focusable="false"/>
@@ -15,6 +16,7 @@
       </ui:VisualElement>
     </ui:VisualElement>
     <ui:VisualElement name="windowDetailsVisualContainer"/>
+    </ed:VisualSplitter>
     <ui:VisualElement name="windowResizer" focusable="false">
       <ui:VisualElement name="windowResizerIcon" focusable="false"/>
     </ui:VisualElement>
