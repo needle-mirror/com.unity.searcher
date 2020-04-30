@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.2.0] - 2020-04-30
+
+Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.2.0-preview.tgz
+
+- Bump to minor version for API validation. 
+
+## [4.1.1] - 2020-04-30
+
+Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.1.1-preview.tgz
+
+- Add all children is now an adapter override. 
+
 ## [4.1.0] - 2020-03-20
 
 Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.1.0-preview.tgz

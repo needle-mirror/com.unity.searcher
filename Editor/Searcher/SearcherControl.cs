@@ -304,20 +304,39 @@ namespace UnityEditor.Searcher
         {
             if (!item.HasChildren)
                 return;
-
-            foreach (var child in item.Children)
+            if (m_Searcher.Adapter.AddAllChildResults)
             {
-                if (!m_Results.Contains(child))
-                    continue;
-
-                if (!idSet.Contains(child))
+                //add all children results for current search term 
+                // eg "Book" will show both "Cook Book" and "Cooking" as children
+                foreach (var child in item.Children)
                 {
-                    idSet.Add(child);
-                    m_VisibleResults.Add(child);
-                }
+                    if (!idSet.Contains(child))
+                    {
+                        idSet.Add(child);
+                        m_VisibleResults.Add(child);
+                    }
 
-                AddResultChildren(child, idSet);
+                    AddResultChildren(child, idSet);
+                }
             }
+            else
+            {
+                foreach (var child in item.Children)
+                {
+                    //only add child results if the child matches the search term 
+                    // eg "Book" will show "Cook Book" but not "Cooking" as a child
+                    if (!m_Results.Contains(child))
+                        continue;
+
+                    if (!idSet.Contains(child))
+                    {
+                        idSet.Add(child);
+                        m_VisibleResults.Add(child);
+                    }
+
+                    AddResultChildren(child, idSet);
+                }
+            } 
         }
 
         bool HasChildResult(SearcherItem item)

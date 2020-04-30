@@ -22,6 +22,7 @@ namespace UnityEditor.Searcher
 
         string Title { get; }
         bool HasDetailsPanel { get; }
+        bool AddAllChildResults { get; }
         float InitialSplitterDetailRatio { get; }
         void OnSelectionChanged(IEnumerable<SearcherItem> items);
         void InitDetailsPanel(VisualElement detailsPanel);
@@ -36,6 +37,7 @@ namespace UnityEditor.Searcher
         readonly VisualTreeAsset m_DefaultItemTemplate;
         public virtual string Title { get; }
         public virtual bool HasDetailsPanel => true;
+        public virtual bool AddAllChildResults => true;
 
         Label m_DetailsLabel;
         public virtual float InitialSplitterDetailRatio => 1.0f;
