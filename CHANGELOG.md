@@ -1,4 +1,9 @@
 # Changelog
+## [4.3.0] - 2020-05-27
+
+Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.3.0-preview.tgz
+
+- Bump minor version for synonyms. 
 
 ## [4.2.0] - 2020-04-30
 

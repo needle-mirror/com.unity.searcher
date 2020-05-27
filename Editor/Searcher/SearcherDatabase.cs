@@ -268,8 +268,15 @@ namespace UnityEditor.Searcher
                 {
                     List<ValueTuple<string, float>> terms  = new List<ValueTuple<string, float>>();
 
+                    // If the item uses synonyms to return results for similar words/phrases, add them to the search terms
+                    IList<string> tokens = null;
+                    if (item.Synonyms == null)
+                        tokens = Tokenize(item.Name);
+                    else
+                        tokens = Tokenize(string.Format("{0} {1}", item.Name, string.Join(" ", item.Synonyms)));
+                        
                     string tokenSuite = "";
-                    foreach (var token in Tokenize(item.Name))
+                    foreach (var token in tokens)
                     {
                         var t = token.ToLower();
                         if (t.Length > 1)

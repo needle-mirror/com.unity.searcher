@@ -13,6 +13,7 @@ namespace UnityEditor.Searcher
         [SerializeField] List<int> m_ChildrenIds;
         [SerializeField] string m_Name;
         [SerializeField] string m_Help;
+        [SerializeField] string[] m_Synonyms;
 
         public int Id => m_Id;
 
@@ -21,6 +22,8 @@ namespace UnityEditor.Searcher
         public string Path { get; private set; }
 
         public string Help => m_Help;
+        
+        public string[] Synonyms { get { return m_Synonyms; } set { m_Synonyms = value; } }
 
         public int Depth => Parent?.Depth + 1 ?? 0;
 
