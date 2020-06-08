@@ -1,4 +1,8 @@
 # Changelog
+
+## [4.3.1] - 2020-06-08
+- Fix bug that cause keyboard navigation to fail. [case 1253544]
+
 ## [4.3.0] - 2020-05-27
 
 Package: https://artifactory.prd.cds.internal.unity3d.com/artifactory/upm-candidates/com.unity.searcher/-/com.unity.searcher-4.3.0-preview.tgz

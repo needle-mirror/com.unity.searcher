@@ -61,7 +61,7 @@ namespace UnityEditor.Searcher
             if (m_ListView != null)
             {
                 m_ListView.bindItem = Bind;
-                m_ListView.RegisterCallback<KeyDownEvent>(OnResultsScrollViewKeyDown);
+                m_ListView.RegisterCallback<KeyDownEvent>(SetSelectedElementInResultsList);
 
 #if UNITY_2020_1_OR_NEWER
                 m_ListView.onItemsChosen += obj => m_SelectionCallback((SearcherItem)obj.FirstOrDefault());
@@ -555,23 +555,6 @@ namespace UnityEditor.Searcher
             }
         }
 
-        void OnResultsScrollViewKeyDown(KeyDownEvent keyDownEvent)
-        {
-            switch (keyDownEvent.keyCode)
-            {
-                case KeyCode.UpArrow:
-                case KeyCode.DownArrow:
-                case KeyCode.Home:
-                case KeyCode.End:
-                case KeyCode.PageUp:
-                case KeyCode.PageDown:
-                    return;
-                default:
-                    SetSelectedElementInResultsList(keyDownEvent);
-                    break;
-            }
-        }
-
         void OnSearchTextFieldKeyDown(KeyDownEvent keyDownEvent)
         {
             // First, check if we cancelled the search.
@@ -642,9 +625,6 @@ namespace UnityEditor.Searcher
 
         void SetSelectedElementInResultsList(KeyDownEvent keyDownEvent)
         {
-            if (m_ListView.childCount == 0)
-                return;
-
             int index;
             switch (keyDownEvent.keyCode)
             {
