@@ -14,6 +14,8 @@ namespace UnityEditor.Searcher
         [SerializeField] string m_Name;
         [SerializeField] string m_Help;
         [SerializeField] string[] m_Synonyms;
+        [SerializeField] Texture2D m_Icon;
+        [SerializeField] bool m_CollapseEmptyIcon = true;
 
         public int Id => m_Id;
 
@@ -26,13 +28,19 @@ namespace UnityEditor.Searcher
         public string[] Synonyms { get { return m_Synonyms; } set { m_Synonyms = value; } }
 
         public int Depth => Parent?.Depth + 1 ?? 0;
+        
+        public object UserData { get; set; }
+
+        public Texture2D Icon { get => m_Icon; set { m_Icon = value; } }
+
+        public bool CollapseEmptyIcon { get => m_CollapseEmptyIcon; set { m_CollapseEmptyIcon = value; } }
 
         public SearcherItem Parent { get; private set; }
         public SearcherDatabaseBase Database { get; private set; }
         public List<SearcherItem> Children { get; private set; }
         public bool HasChildren => Children.Count > 0;
 
-        public SearcherItem(string name, string help = "", List<SearcherItem> children = null)
+        public SearcherItem(string name, string help = "", List<SearcherItem> children = null, object userData = null, Texture2D icon = null, bool collapseEmptyIcon = true)
         {
             m_Id = -1;
             Parent = null;
@@ -40,6 +48,9 @@ namespace UnityEditor.Searcher
 
             m_Name = name;
             m_Help = help;
+            m_Icon = icon;
+            UserData = userData;
+            m_CollapseEmptyIcon = collapseEmptyIcon;
 
             Children = new List<SearcherItem>();
             if (children == null)

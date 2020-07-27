@@ -13,6 +13,7 @@
       </ui:VisualElement>
       <ui:VisualElement name="windowSelectionVisualContainer">
         <ui:ListView class="focusableScrollView" item-height="25" name="windowResultsScrollView"/>
+        <ui:Button text="Confirm" class="searcherMultiSelectConfirmButton" name="confirmButton"/>
       </ui:VisualElement>
     </ui:VisualElement>
     <ui:VisualElement name="windowDetailsVisualContainer"/>

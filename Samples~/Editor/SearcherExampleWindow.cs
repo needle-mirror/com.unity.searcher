@@ -16,6 +16,23 @@ namespace UnityEditor.Searcher
 
         public void OnEnable()
         {
+            Texture2D bookTexture;
+            Texture2D scienceTexture;
+            Texture2D cookingTexture;
+            Texture2D namesTexture;
+            if (EditorGUIUtility.isProSkin)
+            {
+                bookTexture = Resources.Load<Texture2D>("twotone_book_white_18dp");
+                scienceTexture = Resources.Load<Texture2D>("twotone_science_white_18dp");
+                cookingTexture = Resources.Load<Texture2D>("twotone_outdoor_grill_white_18dp");
+                namesTexture = Resources.Load<Texture2D>("twotone_emoji_people_white_18dp");
+            } else
+            {
+                bookTexture = Resources.Load<Texture2D>("twotone_book_black_18dp");
+                scienceTexture = Resources.Load<Texture2D>("twotone_science_black_18dp");
+                cookingTexture = Resources.Load<Texture2D>("twotone_outdoor_grill_black_18dp");
+                namesTexture = Resources.Load<Texture2D>("twotone_emoji_people_black_18dp");
+            }
             titleContent = new GUIContent("Searcher Example Window");
             var bookItems = new List<SearcherItem>
             {
@@ -28,15 +45,15 @@ namespace UnityEditor.Searcher
                         new SearcherItem("Middle Eastern", "Middle-Eastern cuisine is the cuisine of the various countries and peoples of the Middle East. The cuisine of the region is diverse while having a degree of homogeneity. It includes Arab cuisine, Iranian/Persian cuisine, Israeli cuisine/Jewish cuisine, Assyrian cuisine, Armenian cuisine, Kurdish cuisine, Greek cuisine/Cypriot cuisine, Bosnian cuisine, Azerbaijani cuisine, and Turkish cuisine.[1] Some commonly used ingredients include olives and olive oil, pitas, honey, sesame seeds, dates,[1] sumac, chickpeas, mint, rice, and parsley. Some popular dishes include Kebabs, Dolma, Baklava, Doogh, and Doner Kebab (similar to Shawarma)."),
                         new SearcherItem("African", "Traditionally, the various cuisines of Africa use a combination of locally available fruits, cereal grains and vegetables, as well as milk and meat products, and do not usually get food imported. In some parts of the continent, the traditional diet features a lot of milk, curd and whey products."),
                         new SearcherItem("French", "In the 14th century Guillaume Tirel, a court chef known as \"Taillevent\", wrote Le Viandier, one of the earliest recipe collections of medieval France. During that time, French cuisine was heavily influenced by Italian cuisine. In the 17th century, chefs François Pierre La Varenne and Marie-Antoine Carême spearheaded movements that shifted French cooking away from its foreign influences and developed France's own indigenous style. Cheese and wine are a major part of the cuisine. They play different roles regionally and nationally, with many variations and appellation d'origine contrôlée (AOC) (regulated appellation) laws.")
-                    }),
+                    }, icon: cookingTexture),
                     new SearcherItem("Science Fiction", "Science Fiction Category", new List<SearcherItem>
                     {
                         new SearcherItem("Dune", "Dune is a 1965 epic science fiction novel by American author Frank Herbert, originally published as two separate serials in Analog magazine. It tied with Roger Zelazny's This Immortal for the Hugo Award in 1966,[3] and it won the inaugural Nebula Award for Best Novel.[4] It is the first installment of the Dune saga, and in 2003 was cited as the world's best-selling science fiction novel.[5][6]"),
                         new SearcherItem("Ender's Game", "Ender's Game is a 1985 military science fiction novel by American author Orson Scott Card. Set in Earth's future, the novel presents an imperiled mankind after two conflicts with the \"buggers\", an insectoid alien species. In preparation for an anticipated third invasion, children, including the novel's protagonist, Ender Wiggin, are trained from a very young age through increasingly difficult games including some in zero gravity, where Ender's tactical genius is revealed."),
                         new SearcherItem("The Time Machine", "The Time Machine is a science fiction novel by H. G. Wells, published in 1895 and written as a frame narrative. The work is generally credited with the popularization of the concept of time travel by using a vehicle that allows an operator to travel purposely and selectively forwards or backwards in time. The term \"time machine\", coined by Wells, is now almost universally used to refer to such a vehicle.[1]"),
                         new SearcherItem("War of the Worlds", "The War of the Worlds is a science fiction novel by English author H. G. Wells first serialised in 1897 by Pearson's Magazine in the UK and by Cosmopolitan magazine in the US. The novel's first appearance in hardcover was in 1898 from publisher William Heinemann of London. Written between 1895 and 1897,[2] it is one of the earliest stories that detail a conflict between mankind and an extraterrestrial race.[3] The novel is the first-person narrative of both an unnamed protagonist in Surrey and of his younger brother in London as southern England is invaded by Martians. The novel is one of the most commented-on works in the science fiction canon.[4]"),
-                    }),
-                })
+                    }, icon: scienceTexture),
+                }, icon: bookTexture)
             };
 
             var foodItems = new List<SearcherItem>
@@ -65,7 +82,7 @@ namespace UnityEditor.Searcher
                         new SearcherItem("Pumpkin", "A pumpkin is a cultivar of a squash plant, most commonly of Cucurbita pepo, that is round, with smooth, slightly ribbed skin, and deep yellow to orange coloration. The thick shell contains the seeds and pulp. Some exceptionally large cultivars of squash with similar appearance have also been derived from Cucurbita maxima."),
                         new SearcherItem("Apple", "The apple tree (Malus pumila, commonly and erroneously called Malus domestica) is a deciduous tree in the rose family best known for its sweet, pomaceous fruit, the apple")
                     })
-                }),
+                }, collapseEmptyIcon: false),
                 new SearcherItem("Weird names", "Weird names Category", new List<SearcherItem>
                 {
                     new SearcherItem("CamelCase", "CamelCase Category", new List<SearcherItem>
@@ -83,7 +100,7 @@ namespace UnityEditor.Searcher
                         new SearcherItem("SearcherItem", "Lettuce (Lactuca sativa) is an annual plant of the daisy family, Asteraceae. It is most often grown as a leaf vegetable, but sometimes for its stem and seeds. Lettuce is most often used for salads, although it is also seen in other kinds of food, such as soups, sandwiches and wraps; it can also be grilled.[3] One variety, the woju (莴苣), or asparagus lettuce (celtuce), is grown for its stems, which are eaten either raw or cooked"),
                         new SearcherItem("SearcherItemAgain", "The avocado (Persea americana) is a tree long thought to have originated in South Central Mexico,[2] classified as a member of the flowering plant family Lauraceae.[3] Recent archaeological research produced evidence that the avocado was present in Peru as long as 8,000 to 15,000 years ago.[4] Avocado (also alligator pear) refers to the tree's fruit, which is botanically a large berry containing a single large seed.[5]"),
                     }),
-                })
+                }, icon: namesTexture)
             };
 
             var databaseDir = Application.dataPath + "/../Library/Searcher";

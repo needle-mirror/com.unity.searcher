@@ -24,6 +24,8 @@ namespace UnityEditor.Searcher
         IEnumerable<SearcherItem> m_Results;
         List<SearcherItem> m_VisibleResults;
         HashSet<SearcherItem> m_ExpandedResults;
+        HashSet<SearcherItem> m_MultiSelectSelection;
+        Dictionary<SearcherItem, Toggle> m_SearchItemToVisualToggle;
         Searcher m_Searcher;
         string m_SuggestedTerm;
         string m_Text = string.Empty;
@@ -34,6 +36,7 @@ namespace UnityEditor.Searcher
         VisualElement m_SearchTextInput;
         VisualElement m_DetailsPanel;
         VisualElement m_SearcherPanel;
+        Button m_ConfirmButton;
 
         internal Label TitleLabel { get; }
         internal VisualElement Resizer { get; }
@@ -54,9 +57,10 @@ namespace UnityEditor.Searcher
 
             m_VisibleResults = new List<SearcherItem>();
             m_ExpandedResults = new HashSet<SearcherItem>();
+            m_MultiSelectSelection = new HashSet<SearcherItem>();
+            m_SearchItemToVisualToggle = new Dictionary<SearcherItem, Toggle>();
 
             m_ListView = this.Q<ListView>(k_WindowResultsScrollViewName);
-
 
             if (m_ListView != null)
             {
@@ -64,10 +68,10 @@ namespace UnityEditor.Searcher
                 m_ListView.RegisterCallback<KeyDownEvent>(SetSelectedElementInResultsList);
 
 #if UNITY_2020_1_OR_NEWER
-                m_ListView.onItemsChosen += obj => m_SelectionCallback((SearcherItem)obj.FirstOrDefault());
+                m_ListView.onItemsChosen += obj => OnListViewSelect((SearcherItem)obj.FirstOrDefault());
                 m_ListView.onSelectionChange += selectedItems => m_Searcher.Adapter.OnSelectionChanged(selectedItems.OfType<SearcherItem>().ToList());
 #else
-                m_ListView.onItemChosen += obj => m_SelectionCallback((SearcherItem)obj);
+                m_ListView.onItemChosen += obj => OnListViewSelect((SearcherItem)obj);
                 m_ListView.onSelectionChanged += selectedItems => m_Searcher.Adapter.OnSelectionChanged(selectedItems.OfType<SearcherItem>());
 #endif
                 m_ListView.focusable = true;
@@ -94,6 +98,13 @@ namespace UnityEditor.Searcher
 
             Resizer = this.Q(k_WindowResizerName);
 
+            m_ConfirmButton = this.Q<Button>("confirmButton");
+#if UNITY_2019_3_OR_NEWER
+            m_ConfirmButton.clicked += OnConfirmMultiselect;
+#else
+            m_ConfirmButton.clickable.clicked += OnConfirmMultiselect;
+#endif
+
             RegisterCallback<AttachToPanelEvent>(OnEnterPanel);
             RegisterCallback<DetachFromPanelEvent>(OnLeavePanel);
 
@@ -101,6 +112,19 @@ namespace UnityEditor.Searcher
             EditorApplication.update += HackDueToListViewScrollViewStealingFocus;
 
             style.flexGrow = 1;
+        }
+
+        void OnConfirmMultiselect()
+        {
+            if (m_MultiSelectSelection.Count == 0)
+            {
+                m_SelectionCallback(null);
+                return;
+            } 
+            foreach (SearcherItem item in m_MultiSelectSelection)
+            {
+                m_SelectionCallback(item);
+            }
         }
 
         void HackDueToListViewScrollViewStealingFocus()
@@ -128,10 +152,22 @@ namespace UnityEditor.Searcher
             }
         }
 
+        void OnListViewSelect(SearcherItem item)
+        {
+            if (!m_Searcher.Adapter.MultiSelectEnabled)
+            {
+                m_SelectionCallback(item);
+            }
+            else
+            {
+                ToggleItemForMultiSelect(item, !m_MultiSelectSelection.Contains(item));
+            }
+        }
+
         void CancelSearch()
         {
             OnSearchTextFieldTextChanged(InputEvent.GetPooled(m_Text, string.Empty));
-            m_SelectionCallback(null);
+            OnListViewSelect(null);
             m_AnalyticsDataCallback?.Invoke(new Searcher.AnalyticsEvent(Searcher.AnalyticsEvent.EventType.Cancelled, m_SearchTextField.value));
         }
 
@@ -140,6 +176,10 @@ namespace UnityEditor.Searcher
             m_Searcher = searcher;
             m_SelectionCallback = selectionCallback;
             m_AnalyticsDataCallback = analyticsDataCallback;
+
+            if (m_Searcher.Adapter.MultiSelectEnabled) {
+                AddToClassList("searcher__multiselect");
+            }
 
             if (m_Searcher.Adapter.HasDetailsPanel)
             {
@@ -211,10 +251,28 @@ namespace UnityEditor.Searcher
             }
 
             m_ListView.itemsSource = m_VisibleResults;
-            m_ListView.makeItem = m_Searcher.Adapter.MakeItem;
-            m_ListView.Refresh();
+            m_ListView.makeItem = MakeItem;
+            RefreshListView();
 
             SetSelectedElementInResultsList(visibleIndex);
+        }
+
+        VisualElement MakeItem()
+        {
+            VisualElement item = m_Searcher.Adapter.MakeItem();
+            if (m_Searcher.Adapter.MultiSelectEnabled)
+            {
+                var selectionToggle = item.Q<Toggle>("itemToggle");
+                if (selectionToggle != null)
+                {
+                    selectionToggle.RegisterValueChangedCallback(changeEvent =>
+                    {
+                        SearcherItem searcherItem = item.userData as SearcherItem;
+                        ToggleItemForMultiSelect(searcherItem, changeEvent.newValue);
+                    });
+                }
+            }
+            return item;
         }
 
         void GenerateVisibleResults()
@@ -373,7 +431,35 @@ namespace UnityEditor.Searcher
             var item = m_VisibleResults[index];
             var expanderState = GetExpanderState(index);
             var expander = m_Searcher.Adapter.Bind(target, item, expanderState, m_Text);
+            var selectionToggle = target.Q<Toggle>("itemToggle");
+            if (selectionToggle != null)
+            {
+                selectionToggle.SetValueWithoutNotify(m_MultiSelectSelection.Contains(item));
+                m_SearchItemToVisualToggle[item] = selectionToggle;
+            }
             expander.RegisterCallback<MouseDownEvent>(ExpandOrCollapse);
+        }
+
+        void ToggleItemForMultiSelect(SearcherItem item, bool selected)
+        {
+            if (selected)
+            {
+                m_MultiSelectSelection.Add(item);
+            } else
+            {
+                m_MultiSelectSelection.Remove(item);
+            }
+
+            Toggle toggle;
+            if (m_SearchItemToVisualToggle.TryGetValue(item, out toggle))
+            {
+                toggle.SetValueWithoutNotify(selected);
+            }
+
+            foreach (var child in item.Children)
+            {
+                ToggleItemForMultiSelect(child, selected);
+            }
         }
 
         static void GetItemsToHide(SearcherItem parent, ref HashSet<SearcherItem> itemsToHide)
@@ -414,6 +500,12 @@ namespace UnityEditor.Searcher
                 m_VisibleResults.Remove(item);
         }
 
+        void RefreshListView()
+        {
+            m_SearchItemToVisualToggle.Clear();
+            m_ListView.Refresh();
+        }
+
         // ReSharper disable once UnusedMember.Local
         void RefreshListViewOn()
         {
@@ -441,7 +533,7 @@ namespace UnityEditor.Searcher
             RegenerateVisibleResults();
             HideUnexpandedItems();
 
-            m_ListView.Refresh();
+            RefreshListView();
         }
 
         void Collapse(SearcherItem item)
@@ -461,7 +553,7 @@ namespace UnityEditor.Searcher
             HideUnexpandedItems();
 
             // TODO: understand what happened
-            m_ListView.Refresh();
+            RefreshListView();
 
             // RefreshListViewOn();
         }
@@ -629,19 +721,19 @@ namespace UnityEditor.Searcher
             switch (keyDownEvent.keyCode)
             {
                 case KeyCode.Escape:
-                    m_SelectionCallback(null);
+                    OnListViewSelect(null);
                     m_AnalyticsDataCallback?.Invoke(new Searcher.AnalyticsEvent(Searcher.AnalyticsEvent.EventType.Cancelled, m_SearchTextField.value));
                     break;
                 case KeyCode.Return:
                 case KeyCode.KeypadEnter:
                     if (m_ListView.selectedIndex != -1)
                     {
-                        m_SelectionCallback((SearcherItem)m_ListView.selectedItem);
+                        OnListViewSelect((SearcherItem)m_ListView.selectedItem);
                         m_AnalyticsDataCallback?.Invoke(new Searcher.AnalyticsEvent(Searcher.AnalyticsEvent.EventType.Picked, m_SearchTextField.value));
                     }
                     else
                     {
-                        m_SelectionCallback(null);
+                        OnListViewSelect(null);
                         m_AnalyticsDataCallback?.Invoke(new Searcher.AnalyticsEvent(Searcher.AnalyticsEvent.EventType.Cancelled, m_SearchTextField.value));
                     }
                     break;

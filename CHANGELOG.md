@@ -1,5 +1,15 @@
 # Changelog
 
+## [4.6.0] - 2020-07-27
+- Added support for multi-select, enabled via MultiSelectEnabled in the SearcherAdapter.
+
+## [4.5.0] - 2020-07-15
+- Add support for displaying icons in SearcherItem.
+
+## [4.4.0] - 2020-07-13
+- Add custom UserData field to SearcherItem.
+- Add SearcherTreeUtility to create a SearcherItem tree from a flat list of paths.
+
 ## [4.3.1] - 2020-06-08
 - Fix bug that cause keyboard navigation to fail. [case 1253544]
 

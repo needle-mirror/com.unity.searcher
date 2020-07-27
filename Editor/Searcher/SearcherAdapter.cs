@@ -23,6 +23,7 @@ namespace UnityEditor.Searcher
         string Title { get; }
         bool HasDetailsPanel { get; }
         bool AddAllChildResults { get; }
+        bool MultiSelectEnabled { get; }
         float InitialSplitterDetailRatio { get; }
         void OnSelectionChanged(IEnumerable<SearcherItem> items);
         void InitDetailsPanel(VisualElement detailsPanel);
@@ -38,6 +39,7 @@ namespace UnityEditor.Searcher
         public virtual string Title { get; }
         public virtual bool HasDetailsPanel => true;
         public virtual bool AddAllChildResults => true;
+        public virtual bool MultiSelectEnabled => false;
 
         Label m_DetailsLabel;
         public virtual float InitialSplitterDetailRatio => 1.0f;
@@ -78,6 +80,16 @@ namespace UnityEditor.Searcher
 
             var nameLabelsContainer = element.Q<VisualElement>("labelsContainer");
             nameLabelsContainer.Clear();
+
+            var iconElement = element.Q<VisualElement>("itemIconVisualElement");
+            iconElement.style.backgroundImage = item.Icon;
+            if (item.Icon == null && item.CollapseEmptyIcon)
+            {
+                iconElement.style.display = DisplayStyle.None;
+            } else
+            {
+                iconElement.style.display = DisplayStyle.Flex;
+            }
 
             if (string.IsNullOrWhiteSpace(query))
                 nameLabelsContainer.Add(new Label(item.Name));
