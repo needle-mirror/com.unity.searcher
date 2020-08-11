@@ -23,8 +23,12 @@ namespace UnityEditor.Searcher
 
         public string Path { get; private set; }
 
-        public string Help => m_Help;
-        
+        public string Help
+        {
+            get => m_Help;
+            set => m_Help = value;
+        }
+
         public string[] Synonyms { get { return m_Synonyms; } set { m_Synonyms = value; } }
 
         public int Depth => Parent?.Depth + 1 ?? 0;

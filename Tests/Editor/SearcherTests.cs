@@ -10,9 +10,9 @@ using UnityEngine;
 
 namespace UnityEditor.Searcher.Tests
 {
-    class SearcherTests
+    internal abstract class SearcherTestsBase
     {
-        Searcher m_Searcher;
+        protected Searcher m_Searcher;
 
         [OneTimeSetUp]
         public void Init()
@@ -65,46 +65,112 @@ namespace UnityEditor.Searcher.Tests
                 })
             };
 
-            var databaseDir = Application.dataPath + "/../Library/Searcher/Tests";
+            SearcherDatabaseBase bookDatabase = Create(bookItems);
 
-            // Demonstrating creation and then loading from disk of database.
-            SearcherDatabase.Create(bookItems, databaseDir + "/Books");
-            var bookDatabase = SearcherDatabase.Load(databaseDir + "/Books");
-
-            var foodDatabase = SearcherDatabase.Create(foodItems, databaseDir + "/Foods");
+            SearcherDatabaseBase foodDatabase = Create(foodItems);
 
             m_Searcher = new Searcher(new[]{ foodDatabase, bookDatabase }, "Popup Example");
         }
+
+        protected abstract SearcherDatabaseBase Create(List<SearcherItem> bookItems);
 
         [OneTimeTearDown]
         public void Cleanup()
         {
         }
 
-        [TestCase("Japanese", 1)]
-        [TestCase("books", 1)]
-        [TestCase("C", 5)]
-        public void SingleTermSearch(string term, int expectedResultCount)
+        protected void SingleTermSearch(string term, int expectedResultCount)
         {
             Assert.IsTrue(term != null, "Term must not be null");
 
             var items = m_Searcher.Search(term);
+            foreach (var item in items)
+            {
+                Debug.Log(item.Name);
+            }
 
             Assert.AreEqual(expectedResultCount, items.Count(), "Term '" + term + "' must match at least one data stub.");
-
-            Assert.IsTrue(items.First().Name.ToLower().StartsWith(term.ToLower()));
         }
 
-        [TestCase("The Time Machine", 1)]
-        [TestCase("Books Cook", 2)]
-        [TestCase("Food Vegetables Lett", 3)]
-        public void MultipleTermsSearch(string term, int expectedResultCount)
+        protected void MultipleTermsSearch(string term, int expectedResultCount)
         {
             Assert.IsTrue(term != null, "Term must not be null");
 
             var items = m_Searcher.Search(term);
+            foreach (var item in items)
+            {
+                Debug.Log(item.Name);
+            }
 
             Assert.AreEqual(expectedResultCount, items.Count(), "Term '" + term + "' must match at least one data stub.");
+        }
+    }
+
+    class SearcherTests : SearcherTestsBase
+    {
+        protected override SearcherDatabaseBase Create(List<SearcherItem> bookItems)
+        {
+            return SearcherDatabase.Create(bookItems, null, false);
+        }
+
+        public static IEnumerable<object[]> SingleTermCases()
+        {
+            yield return new object[] {"Japanese", 1};
+            yield return new object[] {"books", 1};
+            yield return new object[] {"C", 5};
+        }
+
+        public static IEnumerable<object[]> MultipleTermCases()
+        {
+            yield return new object[] {"The Time Machine", 1};
+            yield return new object[] {"Books Cook", 2};
+            yield return new object[] {"Food Vegetables Lett", 3};
+        }
+
+        [TestCaseSource(nameof(SingleTermCases))]
+        public void SingleTermSearch(string term, int expectedResultCount)
+        {
+            base.SingleTermSearch(term, expectedResultCount);
+        }
+
+        [TestCaseSource(nameof(MultipleTermCases))]
+        public void MultipleTermsSearch(string term, int expectedResultCount)
+        {
+            base.MultipleTermsSearch(term, expectedResultCount);
+        }
+    }
+
+    class LuceneSearcherTests : SearcherTestsBase
+    {
+        protected override SearcherDatabaseBase Create(List<SearcherItem> bookItems)
+        {
+            return LuceneSearcherDatabase.Create(bookItems, null);
+        }
+
+        public static IEnumerable<object[]> SingleTermCases()
+        {
+            yield return new object[] {"Japanese", 1};
+            yield return new object[] {"books", 12};
+            yield return new object[] {"C", 9};
+        }
+
+        public static IEnumerable<object[]> MultipleTermCases()
+        {
+            yield return new object[] {"The Time Machine", 1};
+            yield return new object[] {"Books Cook", 6};
+            yield return new object[] {"Food Vegetables Lett", 1};
+        }
+
+        [TestCaseSource(nameof(SingleTermCases))]
+        public void SingleTermSearch(string term, int expectedResultCount)
+        {
+            base.SingleTermSearch(term, expectedResultCount);
+        }
+
+        [TestCaseSource(nameof(MultipleTermCases))]
+        public void MultipleTermsSearch(string term, int expectedResultCount)
+        {
+            base.MultipleTermsSearch(term, expectedResultCount);
         }
     }
 

@@ -274,7 +274,7 @@ namespace UnityEditor.Searcher
                         tokens = Tokenize(item.Name);
                     else
                         tokens = Tokenize(string.Format("{0} {1}", item.Name, string.Join(" ", item.Synonyms)));
-                        
+
                     string tokenSuite = "";
                     foreach (var token in tokens)
                     {

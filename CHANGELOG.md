@@ -1,4 +1,6 @@
 # Changelog
+## [4.7.0] - 2020-08-11
+- Added Lucene.Net DLLs and first version of the LuceneDatabase
 
 ## [4.6.0] - 2020-07-27
 - Added support for multi-select, enabled via MultiSelectEnabled in the SearcherAdapter.
