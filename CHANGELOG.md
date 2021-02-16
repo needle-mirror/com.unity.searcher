@@ -1,5 +1,9 @@
 # Changelog
 
+## [4.3.2] - 2021-02-16
+- Fixed bug that causes searcher window to close when double-clicking a category [case 1302267]
+- Fixed bug that causes searcher window to be offset too far when accounting for host window boundaries
+
 ## [4.3.1] - 2020-06-08
 - Fix bug that cause keyboard navigation to fail. [case 1253544]
 

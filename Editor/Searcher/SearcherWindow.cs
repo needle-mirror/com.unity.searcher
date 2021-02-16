@@ -132,7 +132,7 @@ namespace UnityEditor.Searcher
             Action<Searcher.AnalyticsEvent> analyticsDataDelegate,
             Alignment align = default)
         {
-            var position = GetPosition(host, displayPosition);
+            var position = GetPosition(host, displayPosition, align);
             var rect = new Rect(GetPositionWithAlignment(position + host.position.position, Size, align), Size);
 
             Show(host, searcher, itemSelectedDelegate, analyticsDataDelegate, rect);
@@ -184,14 +184,25 @@ namespace UnityEditor.Searcher
             return new Vector2(x, y);
         }
 
-        static Vector2 GetPosition(EditorWindow host, Vector2 displayPosition)
+        static Vector2 GetPosition(EditorWindow host, Vector2 displayPosition, Alignment align)
         {
             var x = displayPosition.x;
             var y = displayPosition.y;
 
             // Searcher overlaps with the right boundary.
             if (x + Size.x >= host.position.size.x)
-                x -= Size.x;
+            {
+                switch (align.horizontal)
+                {
+                    case Alignment.Horizontal.Center:
+                        x -= Size.x / 2;
+                        break;
+
+                    case Alignment.Horizontal.Right:
+                        x -= Size.x;
+                        break;
+                }
+            }
 
             // The displayPosition should be in window world space but the
             // EditorWindow.position is actually the rootVisualElement
@@ -201,7 +212,18 @@ namespace UnityEditor.Searcher
 
             // Searcher overlaps with the bottom boundary.
             if (y + Size.y >= host.position.size.y)
-                y -= Size.y;
+            {
+                switch (align.vertical)
+                {
+                    case Alignment.Vertical.Center:
+                        y -= Size.y / 2;
+                        break;
+
+                    case Alignment.Vertical.Bottom:
+                        y -= Size.y;
+                        break;
+                }
+            }
 
             return new Vector2(x, y);
         }
@@ -362,6 +384,11 @@ namespace UnityEditor.Searcher
 
         void SelectionCallback(SearcherItem item)
         {
+            // Don't close the window if a category is selected (only categories/titles have children, node entries are leaf elements)
+            // We want to prevent collapsing the window due to accidental double-clicks on a title entry, for instance
+            if (item != null && item.HasChildren)
+                return;
+
             if (s_ItemSelectedDelegate == null || s_ItemSelectedDelegate(item))
                 Close();
         }

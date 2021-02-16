@@ -108,7 +108,7 @@ namespace UnityEditor.Searcher.Tests
         }
     }
 
-    public class MatchTests
+    class MatchTests
     {
         static TestCaseData[] Make(string prefix, TestCaseData[] input)
         {
