@@ -18,7 +18,7 @@ namespace UnityEditor.Searcher
             for (var index = 0; index < queryParts.Length; index++)
             {
                 var queryPart = queryParts[index];
-                regex += $"({queryPart})";
+                regex += $"({Regex.Escape(queryPart)})";
                 if (index < queryParts.Length - 1)
                     regex += "|";
             }

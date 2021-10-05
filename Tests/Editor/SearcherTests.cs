@@ -79,7 +79,7 @@ namespace UnityEditor.Searcher.Tests
         {
         }
 
-        protected void SingleTermSearch(string term, int expectedResultCount)
+        protected void SingleTermSearch_Implementation(string term, int expectedResultCount)
         {
             Assert.IsTrue(term != null, "Term must not be null");
 
@@ -92,7 +92,7 @@ namespace UnityEditor.Searcher.Tests
             Assert.AreEqual(expectedResultCount, items.Count(), "Term '" + term + "' must match at least one data stub.");
         }
 
-        protected void MultipleTermsSearch(string term, int expectedResultCount)
+        protected void MultipleTermsSearch_Implementation(string term, int expectedResultCount)
         {
             Assert.IsTrue(term != null, "Term must not be null");
 
@@ -130,47 +130,13 @@ namespace UnityEditor.Searcher.Tests
         [TestCaseSource(nameof(SingleTermCases))]
         public void SingleTermSearch(string term, int expectedResultCount)
         {
-            base.SingleTermSearch(term, expectedResultCount);
+            base.SingleTermSearch_Implementation(term, expectedResultCount);
         }
 
         [TestCaseSource(nameof(MultipleTermCases))]
         public void MultipleTermsSearch(string term, int expectedResultCount)
         {
-            base.MultipleTermsSearch(term, expectedResultCount);
-        }
-    }
-
-    class LuceneSearcherTests : SearcherTestsBase
-    {
-        protected override SearcherDatabaseBase Create(List<SearcherItem> bookItems)
-        {
-            return LuceneSearcherDatabase.Create(bookItems, null);
-        }
-
-        public static IEnumerable<object[]> SingleTermCases()
-        {
-            yield return new object[] {"Japanese", 1};
-            yield return new object[] {"books", 12};
-            yield return new object[] {"C", 9};
-        }
-
-        public static IEnumerable<object[]> MultipleTermCases()
-        {
-            yield return new object[] {"The Time Machine", 1};
-            yield return new object[] {"Books Cook", 6};
-            yield return new object[] {"Food Vegetables Lett", 1};
-        }
-
-        [TestCaseSource(nameof(SingleTermCases))]
-        public void SingleTermSearch(string term, int expectedResultCount)
-        {
-            base.SingleTermSearch(term, expectedResultCount);
-        }
-
-        [TestCaseSource(nameof(MultipleTermCases))]
-        public void MultipleTermsSearch(string term, int expectedResultCount)
-        {
-            base.MultipleTermsSearch(term, expectedResultCount);
+            base.MultipleTermsSearch_Implementation(term, expectedResultCount);
         }
     }
 

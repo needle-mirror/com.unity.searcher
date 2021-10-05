@@ -1,4 +1,25 @@
 # Changelog
+
+## [4.9.1] - 2021-10-05
+- Fixed a usability issue where in some cases searcher would suggest one collapsed category of results that user would have to manually expand anyway
+- Fixed bug that caused incorrect search results with non whitespaced queries for nodes with spaces in their name and for subgraphs [1359158]
+- Fixed bug that causes search results to not be visible sometimes in the searcher window [1366061]
+- Fixed bug that causes exceptions to be thrown when using the up/down arrow keys with search list focused [1358016]
+- Fixed bug that causes some searcher items to be irreversibly collapsed due to expand icon disappearing on collapsing those items [1366074]
+
+## [4.9.0] - 2021-09-07
+- Remove Lucene API and dlls
+
+## [4.8.0] - 2021-02-17
+- Added ability for clients of searcher window to filter and prioritize search results as they need
+- Fixed bug that causes searcher window to prioritize categories over node entries of the same name [case 1304055]
+- Fixed bug that causes searcher window to close when double-clicking a category [case 1302267]
+- Fixed bug that causes searcher window to be offset too far when accounting for host window boundaries
+
+## [4.7.1] - 2020-10-15
+- Fix Regex error during highlighting when the query contains a backslash
+- Fix serialization depth warning caused by a property's backing field getting serialized
+
 ## [4.7.0] - 2020-08-11
 - Added Lucene.Net DLLs and first version of the LuceneDatabase
 

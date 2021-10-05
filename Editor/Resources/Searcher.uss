@@ -119,10 +119,6 @@
     --unity-item-height: 18;
 }
 
-.unity-list-view > * {
-    left: 15px;
-}
-
 .unity-list-view > * #labelsContainer {
     flex-direction: row;
     flex: 1;

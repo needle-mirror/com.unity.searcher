@@ -275,6 +275,11 @@ namespace UnityEditor.Searcher
                     else
                         tokens = Tokenize(string.Format("{0} {1}", item.Name, string.Join(" ", item.Synonyms)));
 
+                    // Fixes bug: https://fogbugz.unity3d.com/f/cases/1359158/
+                    // Without this, node names with spaces or those with Pascal casing were not added to index 
+                    var nodeName = item.Name.ToLower().Replace(" ", String.Empty);
+                    tokens.Add(nodeName);
+                    
                     string tokenSuite = "";
                     foreach (var token in tokens)
                     {

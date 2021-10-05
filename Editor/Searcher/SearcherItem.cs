@@ -32,7 +32,7 @@ namespace UnityEditor.Searcher
         public string[] Synonyms { get { return m_Synonyms; } set { m_Synonyms = value; } }
 
         public int Depth => Parent?.Depth + 1 ?? 0;
-        
+
         public object UserData { get; set; }
 
         public Texture2D Icon { get => m_Icon; set { m_Icon = value; } }
@@ -41,6 +41,9 @@ namespace UnityEditor.Searcher
 
         public SearcherItem Parent { get; private set; }
         public SearcherDatabaseBase Database { get; private set; }
+
+        // the backing field gets serialized otherwise and triggers a "Serialization depth limit 7 exceeded" warning
+        [field:NonSerialized]
         public List<SearcherItem> Children { get; private set; }
         public bool HasChildren => Children.Count > 0;
 

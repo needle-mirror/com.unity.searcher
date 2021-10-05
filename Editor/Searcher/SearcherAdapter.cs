@@ -26,6 +26,7 @@ namespace UnityEditor.Searcher
         bool MultiSelectEnabled { get; }
         float InitialSplitterDetailRatio { get; }
         void OnSelectionChanged(IEnumerable<SearcherItem> items);
+        SearcherItem OnSearchResultsFilter(IEnumerable<SearcherItem> searchResults, string searchQuery);
         void InitDetailsPanel(VisualElement detailsPanel);
     }
 
@@ -115,6 +116,13 @@ namespace UnityEditor.Searcher
                 var itemsList = items.ToList();
                 m_DetailsLabel.text = itemsList.Any() ? itemsList[0].Help : "No results";
             }
+        }
+        
+        // How to handle filtering and prioritization of search results is specific to clients of the searcher window
+        // This callback is meant to be implemented by child classes of SearcherAdapter as they need
+        public virtual SearcherItem OnSearchResultsFilter(IEnumerable<SearcherItem> searchResults, string searchQuery)
+        {
+            return new SearcherItem("");
         }
     }
 }

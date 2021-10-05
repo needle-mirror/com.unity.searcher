@@ -31,11 +31,13 @@ namespace UnityEditor.Searcher
         string m_Text = string.Empty;
         Action<SearcherItem> m_SelectionCallback;
         Action<Searcher.AnalyticsEvent> m_AnalyticsDataCallback;
+        Func<IEnumerable<SearcherItem>, string, SearcherItem> m_SearchResultsFilterCallback;
         ListView m_ListView;
         TextField m_SearchTextField;
         VisualElement m_SearchTextInput;
         VisualElement m_DetailsPanel;
         VisualElement m_SearcherPanel;
+        VisualElement m_ContentContainer;
         Button m_ConfirmButton;
 
         internal Label TitleLabel { get; }
@@ -97,6 +99,8 @@ namespace UnityEditor.Searcher
             m_AutoCompleteLabel = this.Q<Label>(k_WindowAutoCompleteLabelName);
 
             Resizer = this.Q(k_WindowResizerName);
+
+            m_ContentContainer = this.Q("unity-content-container");
 
             m_ConfirmButton = this.Q<Button>("confirmButton");
 #if UNITY_2019_3_OR_NEWER
@@ -171,11 +175,13 @@ namespace UnityEditor.Searcher
             m_AnalyticsDataCallback?.Invoke(new Searcher.AnalyticsEvent(Searcher.AnalyticsEvent.EventType.Cancelled, m_SearchTextField.value));
         }
 
-        public void Setup(Searcher searcher, Action<SearcherItem> selectionCallback, Action<Searcher.AnalyticsEvent> analyticsDataCallback)
+        public void Setup(Searcher searcher, Action<SearcherItem> selectionCallback, Action<Searcher.AnalyticsEvent> analyticsDataCallback, Func<IEnumerable<SearcherItem>, string, SearcherItem> searchResultsFilterCallback)
         {
             m_Searcher = searcher;
             m_SelectionCallback = selectionCallback;
             m_AnalyticsDataCallback = analyticsDataCallback;
+            m_SearchResultsFilterCallback = searchResultsFilterCallback;
+            
 
             if (m_Searcher.Adapter.MultiSelectEnabled) {
                 AddToClassList("searcher__multiselect");
@@ -227,8 +233,26 @@ namespace UnityEditor.Searcher
             var results = m_Results.ToList();
             if (results.Any())
             {
-                var scrollToItem = results.First();
+                SearcherItem scrollToItem = m_SearchResultsFilterCallback?.Invoke(results, query);
+                if(scrollToItem == null)
+                    scrollToItem = results.First();
                 visibleIndex = m_VisibleResults.IndexOf(scrollToItem);
+
+                // If we're trying to scroll to a result that is not visible in a single category,
+                // we need to add that result and its hierarchy back to the visible results
+                // This prevents searcher suggesting a single collapsed category that the user then needs to manually expand regardless
+                if (visibleIndex == -1 && m_VisibleResults.Count() == 1)
+                {
+                    SearcherItem currentItemRoot = scrollToItem;
+                    var idSet = new HashSet<SearcherItem>();
+                    while (currentItemRoot.Parent != null)
+                    {
+                        currentItemRoot = currentItemRoot.Parent;
+                    }
+                    idSet.Add(currentItemRoot);
+                    AddResultChildren(currentItemRoot, idSet);
+                    visibleIndex = m_VisibleResults.IndexOf(scrollToItem);
+                }
 
                 var cursorIndex = m_SearchTextField.cursorIndex;
 
@@ -253,7 +277,7 @@ namespace UnityEditor.Searcher
             m_ListView.itemsSource = m_VisibleResults;
             m_ListView.makeItem = MakeItem;
             RefreshListView();
-
+            
             SetSelectedElementInResultsList(visibleIndex);
         }
 
@@ -423,7 +447,7 @@ namespace UnityEditor.Searcher
                 return m_ExpandedResults.Contains(item) ? ItemExpanderState.Expanded : ItemExpanderState.Collapsed;
             }
 
-            return ItemExpanderState.Hidden;
+            return item.Children.Count != 0 ? ItemExpanderState.Collapsed : ItemExpanderState.Hidden;
         }
 
         void Bind(VisualElement target, int index)
@@ -503,7 +527,11 @@ namespace UnityEditor.Searcher
         void RefreshListView()
         {
             m_SearchItemToVisualToggle.Clear();
+#if UNITY_2021_2_OR_NEWER
+            m_ListView.Rebuild();
+#else
             m_ListView.Refresh();
+#endif
         }
 
         // ReSharper disable once UnusedMember.Local
@@ -663,7 +691,7 @@ namespace UnityEditor.Searcher
             if (keyDownEvent.character == k_TabCharacter)
             {
                 // Prevent switching focus to another visual element.
-                keyDownEvent.PreventDefault();
+                keyDownEvent.PreventDefault(); 
 
                 return;
             }
@@ -747,13 +775,20 @@ namespace UnityEditor.Searcher
                     if (index >= 0 && index < m_ListView.itemsSource.Count)
                         Expand(m_ListView.selectedItem as SearcherItem);
                     break;
+                
+                // Fixes bug: https://fogbugz.unity3d.com/f/cases/1358016/
                 case KeyCode.UpArrow:
-                case KeyCode.DownArrow:
                 case KeyCode.PageUp:
+                    if (m_ListView.selectedIndex > 0)
+                        SetSelectedElementInResultsList(m_ListView.selectedIndex - 1);
+                    break;
+
+                case KeyCode.DownArrow:
                 case KeyCode.PageDown:
-                    index = m_ListView.selectedIndex;
-                    if (index >= 0 && index < m_ListView.itemsSource.Count)
-                        m_ListView.OnKeyDown(keyDownEvent);
+                    if (m_ListView.selectedIndex < 0)
+                        SetSelectedElementInResultsList(0); 
+                    else
+                        SetSelectedElementInResultsList(m_ListView.selectedIndex + 1);
                     break;
             }
         }

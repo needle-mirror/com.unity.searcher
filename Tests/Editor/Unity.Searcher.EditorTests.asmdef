@@ -2,11 +2,11 @@
     "name": "Unity.Searcher.EditorTests",
     "references": [
         "Unity.Searcher.Editor",
-        "Unity.Searcher.EditorSamples",
-        "Lucene.Net"
+        "Unity.Searcher.EditorSamples"
     ],
-    "precompiledReferences": [
-        "Lucene.Net.dll"
+    "precompiledReferences": [],
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"

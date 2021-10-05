@@ -112,7 +112,7 @@ namespace UnityEditor.Searcher
             var foodDatabase = SearcherDatabase.Create(foodItems, databaseDir + "/Foods");
             var searcher = new Searcher(new[]{ foodDatabase, bookDatabase }, "Popup Example");
             var searcherControl = new SearcherControl();
-            searcherControl.Setup(searcher, x => Debug.Log(x != null ? x.Name : "none"), null);
+            searcherControl.Setup(searcher, x => Debug.Log(x != null ? x.Name : "none"), null, null);
 
             rootVisualElement.Add(searcherControl);
         }
