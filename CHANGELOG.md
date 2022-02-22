@@ -1,5 +1,8 @@
 # Changelog
 
+## [4.9.2] - 2022-02-22
+- Fixed a bug that stopped keyboard keys from affecting navigation and interaction with search results list, unless user explicitly focused/click on list using the mouse [1396759]
+
 ## [4.9.1] - 2021-10-05
 - Fixed a usability issue where in some cases searcher would suggest one collapsed category of results that user would have to manually expand anyway
 - Fixed bug that caused incorrect search results with non whitespaced queries for nodes with spaces in their name and for subgraphs [1359158]

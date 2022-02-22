@@ -90,10 +90,10 @@ namespace UnityEditor.Searcher
             if (m_SearchTextField != null)
             {
                 m_SearchTextField.focusable = true;
-                m_SearchTextField.RegisterCallback<InputEvent>(OnSearchTextFieldTextChanged);
+                m_SearchTextField.RegisterCallback<InputEvent>(OnSearchTextFieldTextChanged, TrickleDown.TrickleDown);
 
                 m_SearchTextInput = m_SearchTextField.Q(TextInputBaseField<string>.textInputUssName);
-                m_SearchTextInput.RegisterCallback<KeyDownEvent>(OnSearchTextFieldKeyDown);
+                m_SearchTextInput.RegisterCallback<KeyDownEvent>(OnSearchTextFieldKeyDown,  TrickleDown.TrickleDown);
             }
 
             m_AutoCompleteLabel = this.Q<Label>(k_WindowAutoCompleteLabelName);
@@ -118,7 +118,7 @@ namespace UnityEditor.Searcher
             style.flexGrow = 1;
         }
 
-        void OnConfirmMultiselect()
+		void OnConfirmMultiselect()
         {
             if (m_MultiSelectSelection.Count == 0)
             {
